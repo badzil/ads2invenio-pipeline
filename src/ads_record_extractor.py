@@ -12,3 +12,6 @@ after the extraction they will insert the processed bibcodes in an unique "proce
 
 finally a last process will take the processed bibcodes and will write them to the proper file
 '''
+
+class ADSRecordExtractor(object):
+    """"""
