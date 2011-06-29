@@ -39,10 +39,10 @@ class pipelineManager(object):
             raise 'Wrong parameter: the extraction can be only full or update'
         #otherwise I proceed
         else:
-            #retrieve the list of bibcode to extract
-            bibcodes_list = self.retrieve_bibcodes_to_extract()
+            #retrieve the list of bibcode to extract and the list of bibcodes to delete
+            (bibcodes_to_extract_list, bibcodes_to_delete_list) = self.retrieve_bibcodes_to_extract()
             #call the extractor manager
-            print len(bibcodes_list)
+            print len(bibcodes_to_extract_list), len(bibcodes_to_delete_list)
             
     def retrieve_bibcodes_to_extract(self):
         """method that retrieves the bibcodes that need to be extracted from ADS"""
@@ -174,14 +174,15 @@ class pipelineManager(object):
         
         if settings.DEBUG:
             sys.stdout.write("Full list of bibcodes and related file generated \n")
-        #finally I return the full list of bibcodes
-        return bibcode_to_extract
+        #finally I return the full list of bibcodes and an empty list for the bibcodes to delete
+        return (bibcode_to_extract, [])
 
     def extract_update_list_of_bibcodes(self):
         """Method that extracts the list of bibcodes to update"""
         if settings.DEBUG:
             sys.stdout.write("In function %s \n" % inspect.stack()[0][3]) 
-        return []
+        #I return the list of bibcodes to extract and the list of bibcodes to delete
+        return ([],[])
     
     def extract_diff_bibcodes_from_extraction(self, extraction_dir):
         """method that extracts the list of bibcodes still to extract from a directory used for an extraction"""
