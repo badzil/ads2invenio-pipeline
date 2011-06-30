@@ -42,7 +42,12 @@ class pipelineManager(object):
             #retrieve the list of bibcode to extract and the list of bibcodes to delete
             (bibcodes_to_extract_list, bibcodes_to_delete_list) = self.retrieve_bibcodes_to_extract()
             #call the extractor manager
-            print len(bibcodes_to_extract_list), len(bibcodes_to_delete_list)
+            are = ads_record_extractor.ADSRecordExtractor(bibcodes_to_extract_list, bibcodes_to_delete_list)
+            del bibcodes_to_extract_list
+            del bibcodes_to_delete_list
+            are.extract()
+            
+            return
             
     def retrieve_bibcodes_to_extract(self):
         """method that retrieves the bibcodes that need to be extracted from ADS"""
@@ -73,7 +78,7 @@ class pipelineManager(object):
             if settings.DEBUG:
                 sys.stdout.write("Last extraction was not fine: recovering \n")
             #I retrieve the bibcodes missing from the last extraction
-            return self.extract_diff_bibcodes_from_extraction(os.path.join(settings.BASE_OUTPUT_PATH, self.lastest_extr_dir))
+            return self.remaining_bibcode_to_extract_delete(os.path.join(settings.BASE_OUTPUT_PATH, self.lastest_extr_dir))
             
             
     def check_last_extraction(self):
@@ -185,7 +190,7 @@ class pipelineManager(object):
         return ([],[])
     
     def extract_diff_bibcodes_from_extraction(self, extraction_dir):
-        """method that extracts the list of bibcodes still to extract from a directory used for an extraction"""
+        """method that extracts the list of bibcodes not processed from a directory used for an extraction"""
         if settings.DEBUG:
             sys.stdout.write("In function %s \n" % inspect.stack()[0][3]) 
         #first I extract the list of bibcodes that I had to extract
@@ -198,19 +203,40 @@ class pipelineManager(object):
         bibcodes_done = self.read_bibcode_file(os.path.join(extraction_dir, settings.BASE_FILES['done']))
         #then I extract the ones remaining
         bibcodes_remaining = list((set(bibcodes_to_extract).union(set(bibcodes_to_delete))) - (set(bibcodes_probl).union(set(bibcodes_done))))
+        return bibcodes_remaining
+                   
         
-        #now I want this list ordered with first the preprint and then the other bibcodes
+    def remaining_bibcode_to_extract_delete(self, extraction_dir):
+        """method that finds the bibcodes to extract and to delete not processed in an extraction """
+        if settings.DEBUG:
+            sys.stdout.write("In function %s \n" % inspect.stack()[0][3])
+        #first I extract the list of bibcodes that I had to extract
+        bibcodes_to_extract = self.read_bibcode_file(os.path.join(extraction_dir, settings.BASE_FILES['new']))
+        #then the ones I had to delete
+        bibcodes_to_delete = self.read_bibcode_file(os.path.join(extraction_dir, settings.BASE_FILES['del']))
+        #then the ones that had problems during the extraction
+        bibcodes_probl = self.read_bibcode_file(os.path.join(extraction_dir, settings.BASE_FILES['prob']))
+        #finally the ones that have been extracted correctly
+        bibcodes_done = self.read_bibcode_file(os.path.join(extraction_dir, settings.BASE_FILES['done']))
+        
+        bibcode_processed = list(set(bibcodes_probl).union(set(bibcodes_done)))
+        #then I find the ones remaining to extract
+        bibcodes_to_extract_remaining = list(set(bibcodes_to_extract) - set(bibcode_processed))
+        #then I find the ones remaining to delete
+        bibcodes_to_delete_remaining = list(set(bibcodes_to_delete) - set(bibcode_processed))
+        
+        #now I want the list of extraction  ordered with first the preprint and then the other bibcodes
         #only if I have something remaining
-        if len(bibcodes_remaining) > 0:
+        if len(bibcodes_to_extract_remaining) > 0:
             #I load the saved preprint file 
             bibcodes_preprint =  self.read_bibcode_file(os.path.join(os.path.join(settings.BASE_OUTPUT_PATH, extraction_dir), 'PRE_'+os.path.basename(settings.BIBCODES_PRE)))
-            remaining_preprint = list(set(bibcodes_remaining).intersection(set(bibcodes_preprint)))
+            remaining_preprint = list(set(bibcodes_to_extract_remaining).intersection(set(bibcodes_preprint)))
             remaining_preprint.sort()
-            other_remaining = list(set(bibcodes_remaining) - set(remaining_preprint))
+            other_remaining = list(set(bibcodes_to_extract_remaining) - set(remaining_preprint))
             other_remaining.sort()
-            return remaining_preprint + other_remaining
-        else:
-            return bibcodes_remaining
+            bibcodes_to_extract_remaining =  remaining_preprint + other_remaining
+        
+        return (bibcodes_to_extract_remaining, bibcodes_to_delete_remaining)
         
     
     def read_bibcode_file(self, bibcode_file_path):
@@ -233,7 +259,8 @@ class pipelineManager(object):
             if bibrow[0] != " ":
                 bibrow_elements =  bibrow.split('\t')
                 bibcode = bibrow_elements[0].rstrip('\n')
-                bibcodes_list.append(bibcode)
+                if bibcode != '':
+                    bibcodes_list.append(bibcode)
         
         bibfile.close()
         del bibfile

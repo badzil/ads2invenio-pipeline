@@ -27,3 +27,6 @@ BIBCODES_GEN = '/proj/ads/abstracts/gen/load/latest/index.status'
 BIBCODES_PRE = '/proj/ads/abstracts/pre/load/latest/index.status'
 #ALL
 BIBCODES_ALL = '/proj/ads/abstracts/config/bib2accno.dat'
+
+
+#base name for the file of bibcodes to delete
