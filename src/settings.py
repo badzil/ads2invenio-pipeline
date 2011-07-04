@@ -28,5 +28,16 @@ BIBCODES_PRE = '/proj/ads/abstracts/pre/load/latest/index.status'
 #ALL
 BIBCODES_ALL = '/proj/ads/abstracts/config/bib2accno.dat'
 
+#style sheet path
+STYLESHEET_PATH = basedir + 'xsl/adsXml2MarkXml.xsl'
 
 #base name for the file of bibcodes to delete
+BIBCODE_TO_DELETE_OUT_NAME = 'AAA_bibcode_to_delete'
+#base name for the marcXML files
+MARCXML_FILE_BASE_NAME = 'marcxml'
+
+#maximum number of bibcodes per group of extraction -> it means that this is also the maximum number of bibcodes per file of marcxml
+NUMBER_OF_BIBCODES_PER_GROUP = 1000
+
+#maximum number of worker processes that have to run
+NUMBER_WORKERS = 4

@@ -42,7 +42,7 @@ class pipelineManager(object):
             #retrieve the list of bibcode to extract and the list of bibcodes to delete
             (bibcodes_to_extract_list, bibcodes_to_delete_list) = self.retrieve_bibcodes_to_extract()
             #call the extractor manager
-            are = ads_record_extractor.ADSRecordExtractor(bibcodes_to_extract_list, bibcodes_to_delete_list)
+            are = ads_record_extractor.ADSRecordExtractor(bibcodes_to_extract_list, bibcodes_to_delete_list, self.dirname)
             del bibcodes_to_extract_list
             del bibcodes_to_delete_list
             are.extract()
@@ -78,6 +78,7 @@ class pipelineManager(object):
             if settings.DEBUG:
                 sys.stdout.write("Last extraction was not fine: recovering \n")
             #I retrieve the bibcodes missing from the last extraction
+            self.dirname = self.lastest_extr_dir
             return self.remaining_bibcode_to_extract_delete(os.path.join(settings.BASE_OUTPUT_PATH, self.lastest_extr_dir))
             
             
@@ -153,7 +154,7 @@ class pipelineManager(object):
         preprint_bibcodes = self.read_bibcode_file(settings.BIBCODES_PRE)
         #I copy the preprint file, because I need a copy locally
         try:
-            shutil.copy(settings.BIBCODES_PRE, os.path.join(os.path.join(settings.BASE_OUTPUT_PATH, self.dirname), 'PRE_'+os.path.basename(settings.BIBCODES_PRE)))
+            shutil.copy(settings.BIBCODES_PRE, os.path.join(settings.BASE_OUTPUT_PATH, self.dirname, 'PRE_'+os.path.basename(settings.BIBCODES_PRE)))
         except:
             raise 'Impossible to copy a mandatory file from %s to %s' % (settings.BIBCODES_PRE, os.path.join(settings.BASE_OUTPUT_PATH, self.dirname))
         #then I extract the complete list
@@ -163,7 +164,7 @@ class pipelineManager(object):
         
         #I write these lists bibcodes to the file of bibcodes to extract
         #and in the meanwhile I create the list with first the preprint and then the published
-        bibcode_file = open(os.path.join(settings.BASE_OUTPUT_PATH, os.path.join(self.dirname, settings.BASE_FILES['new'])), 'a')
+        bibcode_file = open(os.path.join(settings.BASE_OUTPUT_PATH, self.dirname, settings.BASE_FILES['new']), 'a')
         bibcode_to_extract = []
         #first the preprints because they can be overwritten by the published ones
         for bibcode in preprint_bibcodes:
@@ -229,7 +230,7 @@ class pipelineManager(object):
         #only if I have something remaining
         if len(bibcodes_to_extract_remaining) > 0:
             #I load the saved preprint file 
-            bibcodes_preprint =  self.read_bibcode_file(os.path.join(os.path.join(settings.BASE_OUTPUT_PATH, extraction_dir), 'PRE_'+os.path.basename(settings.BIBCODES_PRE)))
+            bibcodes_preprint =  self.read_bibcode_file(os.path.join(settings.BASE_OUTPUT_PATH, extraction_dir, 'PRE_'+os.path.basename(settings.BIBCODES_PRE)))
             remaining_preprint = list(set(bibcodes_to_extract_remaining).intersection(set(bibcodes_preprint)))
             remaining_preprint.sort()
             other_remaining = list(set(bibcodes_to_extract_remaining) - set(remaining_preprint))
