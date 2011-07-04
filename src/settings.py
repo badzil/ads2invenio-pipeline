@@ -4,7 +4,7 @@ Settings file
 
 ###########
 #Debug Variable
-DEBUG = True
+DEBUG = False
 ###########
 
 from os.path import dirname, abspath
@@ -37,7 +37,7 @@ BIBCODE_TO_DELETE_OUT_NAME = 'AAA_bibcode_to_delete'
 MARCXML_FILE_BASE_NAME = 'marcxml'
 
 #maximum number of bibcodes per group of extraction -> it means that this is also the maximum number of bibcodes per file of marcxml
-NUMBER_OF_BIBCODES_PER_GROUP = 1000
+NUMBER_OF_BIBCODES_PER_GROUP = 10000
 
 #maximum number of worker processes that have to run
-NUMBER_WORKERS = 4
+NUMBER_WORKERS = 8

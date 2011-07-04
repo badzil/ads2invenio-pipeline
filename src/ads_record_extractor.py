@@ -229,6 +229,7 @@ def extractor_process(q_todo, q_done, q_probl, lock_stdout, extraction_directory
         else:
             bibcodes_probl = bibcodes_probl + bibcodes_ok
             bibcodes_ok = []
+            wrote_filename = False
         
         #finally I pass to the done bibcodes to the proper file    
         q_done.put([task_todo[0], bibcodes_ok, wrote_filename])

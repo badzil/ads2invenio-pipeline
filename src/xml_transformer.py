@@ -33,7 +33,7 @@ class xmlTransformer(object):
         if settings.DEBUG:
             sys.stdout.write("In function %s \n" % inspect.stack()[0][3])
         
-        if self.init_stylesheet():
+        if not self.init_stylesheet():
             return False
         
         #transformation
