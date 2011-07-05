@@ -18,13 +18,13 @@ class writeFile(object):
         #I set the directory where to write
         self.dirname = dirname
     
-    def write_bibcodes_to_delete_file(self, xmlstring, bibcodes_list):
+    def write_bibcodes_to_delete_file(self, xmlstring, bibcodes_list, extraction_name):
         """method that writes the file with the bibcodes to delete and updates the file with the done bibcodes"""
         if settings.DEBUG:
             sys.stdout.write("In function %s \n" % inspect.stack()[0][3]) 
         
         #I build the complete path and filename for the file to extract
-        filename = settings.BIBCODE_TO_DELETE_OUT_NAME + '.xml' #I build it in this way because If I have to create multiple files, probably I need to append a counter before '.xml'
+        filename = settings.BIBCODE_TO_DELETE_OUT_NAME + '_'+ extraction_name + '.xml'
         filepath = os.path.join(settings.BASE_OUTPUT_PATH, self.dirname, filename)
         
         if settings.DEBUG:
@@ -55,12 +55,12 @@ class writeFile(object):
         
         return filepath
 
-    def write_marcXML_file(self, xmlstring, taskname):
+    def write_marcXML_file(self, xmlstring, taskname, extraction_name):
         """method that writes the marcXML to a file naming it in the proper way"""
         if settings.DEBUG:
             sys.stdout.write("In function %s \n" % inspect.stack()[0][3])
         
-        filename = settings.MARCXML_FILE_BASE_NAME + '_' + taskname + '.xml'
+        filename = settings.MARCXML_FILE_BASE_NAME + '_' + extraction_name + '_ '+ taskname + '.xml'
         filepath = os.path.join(settings.BASE_OUTPUT_PATH, self.dirname, filename)
         
         if settings.DEBUG:

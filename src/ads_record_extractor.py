@@ -23,6 +23,7 @@ import multiprocessing
 import libxml2
 import itertools
 import time
+import os
 
 import ads.ADSExports_libxml2
 
@@ -41,6 +42,8 @@ class ADSRecordExtractor(object):
         self.bibcodes_to_delete_list = bibcodes_to_delete_list
         self.bibcodes_to_delete_list.sort()
         self.extraction_directory = extraction_directory
+        #I extract or generate the extraction name
+        self.extraction_name = self.set_extraction_name()
         
     def extract(self):
         """manager of the extraction"""
@@ -84,7 +87,7 @@ class ADSRecordExtractor(object):
         number_of_processes = settings.NUMBER_WORKERS #in production should be a part of multiprocessing.cpu_count 
         
         #I define the worker processes
-        processes = [multiprocessing.Process(target=extractor_process, args=(q_todo, q_done, q_probl, lock_stdout, self.extraction_directory)) for i in range(number_of_processes)]
+        processes = [multiprocessing.Process(target=extractor_process, args=(q_todo, q_done, q_probl, lock_stdout, self.extraction_directory, self.extraction_name)) for i in range(number_of_processes)]
         
         #I append to the todo queue a list of commands to stop the worker processes
         for i in range(number_of_processes):
@@ -160,7 +163,7 @@ class ADSRecordExtractor(object):
         
         #I write to the file
         w2f = write_files.writeFile(self.extraction_directory)
-        filename_delete = w2f.write_bibcodes_to_delete_file(marcxml_string, self.bibcodes_to_delete_list)
+        filename_delete = w2f.write_bibcodes_to_delete_file(marcxml_string, self.bibcodes_to_delete_list, self.extraction_name)
         
         if filename_delete:
             if settings.DEBUG:
@@ -169,10 +172,30 @@ class ADSRecordExtractor(object):
             raise "ERROR: Impossible to create the file for the MarcXML of the bibcodes to delete"
         
         return True
+    
+    def set_extraction_name(self):
+        """Method that sets the name of the current extraction"""
+        filepath = os.path.join(settings.BASE_OUTPUT_PATH, self.extraction_directory, settings.EXTRACTION_FILENAME_LOG)
+        file_obj = open(filepath,'r')
+        rows = file_obj.readlines()
+        file_obj.close()
+        if len(rows) > 0:
+            last_name =  rows[len(rows) - 1]
+            number_ext = int(last_name.split(settings.EXTRACTION_BASE_NAME)[1])
+            number_ext = number_ext + 1
+        else:
+            last_name = None
+            number_ext = 1
         
+        extraction_name = settings.EXTRACTION_BASE_NAME + str(number_ext)  
+        #Then I write the number of extraction to the file
+        file_obj = open(filepath,'a')
+        file_obj.write(extraction_name + '\n')
+        file_obj.close()
         
+        return extraction_name
         
-def extractor_process(q_todo, q_done, q_probl, lock_stdout, extraction_directory):
+def extractor_process(q_todo, q_done, q_probl, lock_stdout, extraction_directory, extraction_name):
     """Worker function for the extraction of bibcodes from ADS
         it has been defined outside any class because it's more simple to treat with multiprocessing """
     
@@ -220,7 +243,7 @@ def extractor_process(q_todo, q_done, q_probl, lock_stdout, extraction_directory
         #if the transformation was ok, I write the file
         if marcXML:
             w2f = write_files.writeFile(extraction_directory)
-            wrote_filename = w2f.write_marcXML_file(marcXML, task_todo[0])
+            wrote_filename = w2f.write_marcXML_file(marcXML, task_todo[0], extraction_name)
             #if the writing of the xml is wrong I consider all the bibcodes problematic
             if not wrote_filename:
                 bibcodes_probl = bibcodes_probl + bibcodes_ok

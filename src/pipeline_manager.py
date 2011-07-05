@@ -67,6 +67,10 @@ class pipelineManager(object):
                 fileobj = open(os.path.join(os.path.join(settings.BASE_OUTPUT_PATH, self.dirname), settings.BASE_FILES[filetype]),'w')
                 fileobj.write('')
                 fileobj.close()
+            # I write also the file to log the extraction name
+            fileobj = open(os.path.join(os.path.join(settings.BASE_OUTPUT_PATH, self.dirname), settings.EXTRACTION_FILENAME_LOG),'w')
+            fileobj.write('')
+            fileobj.close()
             del fileobj
             #then I extract the list of bibcodes according to "mode"
             if self.mode == 'full':

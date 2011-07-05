@@ -16,6 +16,10 @@ BASE_OUTPUT_PATH = basedir + 'out'
 #list of files that MUST be in each output directory
 BASE_FILES = {'new':'bibcodes_to_extract_new_mod.dat', 'del':'bibcodes_to_extract_del.dat', 'done':'bibcodes_extracted.dat', 'prob':'bibcodes_with_problems.dat'}
 
+#file where to store the extraction name log
+EXTRACTION_FILENAME_LOG = 'extraction_name_log.txt'
+EXTRACTION_BASE_NAME = 'extraction_'
+
 #files with list of bibcodes and timestamps
 #AST
 BIBCODES_AST = '/proj/ads/abstracts/ast/load/latest/index.status'
