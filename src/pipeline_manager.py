@@ -98,7 +98,6 @@ class pipelineManager(object):
         for elem in list_of_elements:
             if os.path.isdir(os.path.join(settings.BASE_OUTPUT_PATH, elem)):
                 directories.append(elem)
-        del elem
         
         #I set a variable for the latest dir of extraction
         self.lastest_extr_dir = ''
