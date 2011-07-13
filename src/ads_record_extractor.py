@@ -25,7 +25,7 @@ import itertools
 import time
 import os
 
-import ads.ADSExports_libxml2
+import ads.ADSExports_alternative
 
 import settings
 import write_files
@@ -220,7 +220,7 @@ def extractor_process(q_todo, q_done, q_probl, lock_stdout, extraction_directory
         bibcodes_probl = []
         
         #I define a ADSEXPORT object
-        recs = ads.ADSExports_libxml2.ADSRecords('full', 'XML')
+        recs = ads.ADSExports_alternative.ADSRecords('full', 'XML')
         
         for bibcode in task_todo[1]:
             try:
