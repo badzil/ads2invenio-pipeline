@@ -57,7 +57,7 @@ class writeFile(object):
         """method that writes the marcXML to a file naming it in the proper way"""
         printmsg(self.verbose, "In function %s.%s \n" % (self.__class__.__name__, inspect.stack()[0][3]))
         
-        filename = settings.MARCXML_FILE_BASE_NAME + '_' + extraction_name + '_ '+ taskname + '.xml'
+        filename = settings.MARCXML_FILE_BASE_NAME + '_' + extraction_name + '_'+ taskname + '.xml'
         filepath = os.path.join(settings.BASE_OUTPUT_PATH, self.dirname, filename)
         
         printmsg(self.verbose, "Writing the MarcXML file %s \n" % filepath) 
