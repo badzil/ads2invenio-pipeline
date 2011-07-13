@@ -26,17 +26,17 @@ class xmlTransformer(object):
         try:
             self.style_obj = libxslt.parseStylesheetDoc(libxml2.parseFile(self.stylesheet))
         except:
-            printmsg(True, "ERROR: problem loading stylesheet \n") 
-            return False
+            raise "ERROR: problem loading stylesheet \n"
+        
         return True
     
     def transform(self, doc):
         """ Method that actually make the transformation"""
         printmsg(self.verbose, "In function %s.%s \n" % (self.__class__.__name__, inspect.stack()[0][3]))
         
-        if not self.init_stylesheet():
-            return False
-        
+        #I load the stylesheet
+        self.init_stylesheet()
+                
         #transformation
         try:
             doc = self.style_obj.applyStylesheet(doc, None)
