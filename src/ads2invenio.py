@@ -12,6 +12,7 @@ def parse_parameters():
     parser = OptionParser()
     
     parser.add_option("-m", "--mode", dest="mode", help="Specify the method of extraction (full or update) ", metavar="MODEVALUE")
+    parser.add_option("-v", "--verbose", action="store_true", dest="verbose", help='Use this parameter if a verbose execution is needed ')
     
     # catch the parameters from the command line
     options, _ = parser.parse_args()
@@ -27,6 +28,11 @@ def parse_parameters():
     else:
         raise 'Wrong parameter: the extraction can be only full or update'
     
+    if options.verbose:
+        parameters['verbose'] = True
+    else:
+        parameters['verbose'] = False
+    
     return parameters
 
 def main():
@@ -36,7 +42,7 @@ def main():
     parameters = parse_parameters()
     
     #I call the global manager
-    gm = pipeline_manager.pipelineManager(parameters['mode'])
+    gm = pipeline_manager.pipelineManager(parameters['mode'], parameters['verbose'])
     gm.manage()
     
 if __name__ == "__main__":

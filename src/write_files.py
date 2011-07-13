@@ -5,30 +5,29 @@ can be freed just after the operation is complete
 '''
 
 import os
-import sys
 import inspect
 
 import settings
+from global_functions import printmsg
 
 class writeFile(object):
     """Class that writes the output files of the pipeline"""
     
-    def __init__(self, dirname):
+    def __init__(self, dirname, verbose):
         """Constructor"""
         #I set the directory where to write
         self.dirname = dirname
+        self.verbose = verbose
     
     def write_bibcodes_to_delete_file(self, xmlstring, bibcodes_list, extraction_name):
         """method that writes the file with the bibcodes to delete and updates the file with the done bibcodes"""
-        if settings.DEBUG:
-            sys.stdout.write("In function %s \n" % inspect.stack()[0][3]) 
+        printmsg(self.verbose, "In function %s.%s \n" % (self.__class__.__name__, inspect.stack()[0][3]))
         
         #I build the complete path and filename for the file to extract
         filename = settings.BIBCODE_TO_DELETE_OUT_NAME + '_'+ extraction_name + '.xml'
         filepath = os.path.join(settings.BASE_OUTPUT_PATH, self.dirname, filename)
         
-        if settings.DEBUG:
-            sys.stdout.write("Writing the MarcXML file %s \n" % filepath) 
+        printmsg(self.verbose, "Writing the MarcXML file %s \n" % filepath) 
         #then I actually write the file
         try:
             file_obj = open(filepath,'w')
@@ -41,8 +40,7 @@ class writeFile(object):
         
         #then I append the list of bibcodes actually written extracte to the "done file"
         bibdone_filename = os.path.join(settings.BASE_OUTPUT_PATH, self.dirname, settings.BASE_FILES['done'])
-        if settings.DEBUG:
-            sys.stdout.write('Updating the "processed bibcodes" file %s \n' % bibdone_filename) 
+        printmsg(self.verbose, 'Updating the "processed bibcodes" file %s \n' % bibdone_filename) 
         try:
             file_obj = open(bibdone_filename, 'a')
             for bibcode in bibcodes_list:
@@ -57,14 +55,12 @@ class writeFile(object):
 
     def write_marcXML_file(self, xmlstring, taskname, extraction_name):
         """method that writes the marcXML to a file naming it in the proper way"""
-        if settings.DEBUG:
-            sys.stdout.write("In function %s \n" % inspect.stack()[0][3])
+        printmsg(self.verbose, "In function %s.%s \n" % (self.__class__.__name__, inspect.stack()[0][3]))
         
         filename = settings.MARCXML_FILE_BASE_NAME + '_' + extraction_name + '_ '+ taskname + '.xml'
         filepath = os.path.join(settings.BASE_OUTPUT_PATH, self.dirname, filename)
         
-        if settings.DEBUG:
-            sys.stdout.write("Writing the MarcXML file %s \n" % filepath) 
+        printmsg(self.verbose, "Writing the MarcXML file %s \n" % filepath) 
         #then I actually write the file
         try:
             file_obj = open(filepath,'w')
@@ -79,8 +75,7 @@ class writeFile(object):
     
     def write_done_bibcodes_to_file(self, bibcodes_list):
         """Method that writes a list of bibcodes in the file of the done bibcodes"""
-        if settings.DEBUG:
-            sys.stdout.write("In function %s \n" % inspect.stack()[0][3])
+        printmsg(self.verbose, "In function %s.%s \n" % (self.__class__.__name__, inspect.stack()[0][3]))
         
         filepath = os.path.join(settings.BASE_OUTPUT_PATH, self.dirname, settings.BASE_FILES['done'])
         
@@ -96,8 +91,7 @@ class writeFile(object):
     
     def write_problematic_bibcodes_to_file(self, bibcodes_list):
         """Method that writes a list of bibcodes in the file of the done bibcodes"""
-        if settings.DEBUG:
-            sys.stdout.write("In function %s \n" % inspect.stack()[0][3])
+        printmsg(self.verbose, "In function %s.%s \n" % (self.__class__.__name__, inspect.stack()[0][3]))
         
         filepath = os.path.join(settings.BASE_OUTPUT_PATH, self.dirname, settings.BASE_FILES['prob'])
         

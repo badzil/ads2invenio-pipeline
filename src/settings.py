@@ -2,11 +2,6 @@
 Settings file
 '''
 
-###########
-#Debug Variable
-DEBUG = False
-###########
-
 from os.path import dirname, abspath
 basedir = dirname(abspath(__file__)) + '/'
 
@@ -44,4 +39,4 @@ MARCXML_FILE_BASE_NAME = 'marcxml'
 NUMBER_OF_BIBCODES_PER_GROUP = 10000
 
 #maximum number of worker processes that have to run
-NUMBER_WORKERS = 8
+NUMBER_WORKERS = 6

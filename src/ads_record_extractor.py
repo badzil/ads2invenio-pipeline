@@ -30,13 +30,15 @@ import ads.ADSExports_libxml2
 import settings
 import write_files
 import xml_transformer
+from global_functions import printmsg
 
 
 class ADSRecordExtractor(object):
     """Class that manages the actual extraction of the record from ADS to MarcXML"""
     
-    def __init__(self, bibcodes_to_extract_list, bibcodes_to_delete_list, extraction_directory):
+    def __init__(self, bibcodes_to_extract_list, bibcodes_to_delete_list, extraction_directory, verbose):
         """Constructor"""
+        self.verbose = verbose
         self.bibcodes_to_extract_list = bibcodes_to_extract_list
         #the bibcodes to extract MUST NOT be sorted
         self.bibcodes_to_delete_list = bibcodes_to_delete_list
@@ -47,8 +49,7 @@ class ADSRecordExtractor(object):
         
     def extract(self):
         """manager of the extraction"""
-        if settings.DEBUG:
-            sys.stdout.write("In function %s \n" % inspect.stack()[0][3]) 
+        printmsg(self.verbose, "In function %s.%s \n" % (self.__class__.__name__, inspect.stack()[0][3])) 
         
         ########################################################################
         #part where the bibcode to delete are processed
@@ -59,7 +60,7 @@ class ADSRecordExtractor(object):
             try:
                 self.process_bibcodes_to_delete()
             except Exception:
-                sys.stdout.write("Unable to process the bibcodes to delete \n")
+                printmsg(True, "Unable to process the bibcodes to delete \n")
                 raise
         
         ########################################################################
@@ -87,16 +88,16 @@ class ADSRecordExtractor(object):
         number_of_processes = settings.NUMBER_WORKERS #in production should be a part of multiprocessing.cpu_count 
         
         #I define the worker processes
-        processes = [multiprocessing.Process(target=extractor_process, args=(q_todo, q_done, q_probl, lock_stdout, self.extraction_directory, self.extraction_name)) for i in range(number_of_processes)]
+        processes = [multiprocessing.Process(target=extractor_process, args=(q_todo, q_done, q_probl, lock_stdout, self.extraction_directory, self.extraction_name, self.verbose)) for i in range(number_of_processes)]
         
         #I append to the todo queue a list of commands to stop the worker processes
         for i in range(number_of_processes):
             q_todo.put(['STOP', ''])
         
         #I define a "done bibcode" worker
-        donebib = multiprocessing.Process(target=done_extraction_process, args=(q_done, number_of_processes, lock_stdout, self.extraction_directory))
+        donebib = multiprocessing.Process(target=done_extraction_process, args=(q_done, number_of_processes, lock_stdout, self.extraction_directory, self.verbose))
         #I define a "problematic bibcode" worker
-        problbib = multiprocessing.Process(target=problematic_extraction_process, args=(q_probl, number_of_processes, lock_stdout, self.extraction_directory))
+        problbib = multiprocessing.Process(target=problematic_extraction_process, args=(q_probl, number_of_processes, lock_stdout, self.extraction_directory, self.verbose))
             
         #I start the worker processes
         for p in processes:
@@ -115,19 +116,19 @@ class ADSRecordExtractor(object):
         #for i in range(len(bibtoprocess_splitted)):
         #    print q_done.get()
         
-        sys.stdout.write("Extraction ended! \n") 
+        printmsg(True, "Extraction ended! \n") 
         
     
     def grouper(self, n, iterable):
         """method to split a list in multiple groups"""
+        printmsg(self.verbose, "In function %s.%s \n" % (self.__class__.__name__, inspect.stack()[0][3]))
         args = [iter(iterable)] * n
         return list(([e for e in t if e != None] for t in itertools.izip_longest(*args)))
         
         
     def process_bibcodes_to_delete(self):
         """method that creates the MarcXML for the bibcodes to delete"""
-        if settings.DEBUG:
-            sys.stdout.write("In function %s \n" % inspect.stack()[0][3]) 
+        printmsg(self.verbose, "In function %s.%s \n" % (self.__class__.__name__, inspect.stack()[0][3]))
         
         #I create an unique file for all the bibcodes to delete: 
         #I don't think it's necessary to split the content in groups, since the XML is really simple
@@ -162,12 +163,11 @@ class ADSRecordExtractor(object):
         del doc
         
         #I write to the file
-        w2f = write_files.writeFile(self.extraction_directory)
+        w2f = write_files.writeFile(self.extraction_directory, self.verbose)
         filename_delete = w2f.write_bibcodes_to_delete_file(marcxml_string, self.bibcodes_to_delete_list, self.extraction_name)
         
         if filename_delete:
-            if settings.DEBUG:
-                sys.stdout.write("The MarcXML for the bibcode to delete has been written to the file %s \n" % filename_delete)
+            printmsg(self.verbose, "The MarcXML for the bibcode to delete has been written to the file %s \n" % filename_delete)
         else:
             raise "ERROR: Impossible to create the file for the MarcXML of the bibcodes to delete"
         
@@ -175,6 +175,8 @@ class ADSRecordExtractor(object):
     
     def set_extraction_name(self):
         """Method that sets the name of the current extraction"""
+        printmsg(self.verbose, "In function %s.%s \n" % (self.__class__.__name__, inspect.stack()[0][3]))
+        
         filepath = os.path.join(settings.BASE_OUTPUT_PATH, self.extraction_directory, settings.EXTRACTION_FILENAME_LOG)
         file_obj = open(filepath,'r')
         rows = file_obj.readlines()
@@ -195,7 +197,7 @@ class ADSRecordExtractor(object):
         
         return extraction_name
         
-def extractor_process(q_todo, q_done, q_probl, lock_stdout, extraction_directory, extraction_name):
+def extractor_process(q_todo, q_done, q_probl, lock_stdout, extraction_directory, extraction_name, verbose):
     """Worker function for the extraction of bibcodes from ADS
         it has been defined outside any class because it's more simple to treat with multiprocessing """
     
@@ -208,7 +210,7 @@ def extractor_process(q_todo, q_done, q_probl, lock_stdout, extraction_directory
         
         #I print when I'm startring the extraction
         lock_stdout.acquire()
-        sys.stdout.write(multiprocessing.current_process().name + (' (worker) starting to process group %s at %s \n' % (task_todo[0], time.strftime("%Y-%m-%d %H:%M:%S"))))  
+        printmsg(True, multiprocessing.current_process().name + (' (worker) starting to process group %s at %s \n' % (task_todo[0], time.strftime("%Y-%m-%d %H:%M:%S"))))  
         lock_stdout.release() 
         
         ############
@@ -225,7 +227,7 @@ def extractor_process(q_todo, q_done, q_probl, lock_stdout, extraction_directory
                 recs.addRecord(bibcode)
                 bibcodes_ok.append(bibcode)
             except:
-                sys.stdout.write('ERROR: problem retrieving the bibcode "%s" \n' % bibcode)
+                printmsg(True, 'ERROR: problem retrieving the bibcode "%s" \n' % bibcode)
                 bibcodes_probl.append(bibcode)
         
         #I extract the object I created
@@ -234,7 +236,7 @@ def extractor_process(q_todo, q_done, q_probl, lock_stdout, extraction_directory
         
         try:
             #I define a transformation object
-            tr = xml_transformer.xmlTransformer()
+            tr = xml_transformer.xmlTransformer(verbose)
             #and I transform my object
             marcXML = tr.transform(xmlobj)
         except:
@@ -242,7 +244,7 @@ def extractor_process(q_todo, q_done, q_probl, lock_stdout, extraction_directory
         
         #if the transformation was ok, I write the file
         if marcXML:
-            w2f = write_files.writeFile(extraction_directory)
+            w2f = write_files.writeFile(extraction_directory, verbose)
             wrote_filename = w2f.write_marcXML_file(marcXML, task_todo[0], extraction_name)
             #if the writing of the xml is wrong I consider all the bibcodes problematic
             if not wrote_filename:
@@ -260,7 +262,7 @@ def extractor_process(q_todo, q_done, q_probl, lock_stdout, extraction_directory
         q_probl.put([task_todo[0], bibcodes_probl])
              
         lock_stdout.acquire()
-        sys.stdout.write(multiprocessing.current_process().name + (' (worker) finished to process group %s at %s \n' % (task_todo[0], time.strftime("%Y-%m-%d %H:%M:%S"))))  
+        printmsg(True, multiprocessing.current_process().name + (' (worker) finished to process group %s at %s \n' % (task_todo[0], time.strftime("%Y-%m-%d %H:%M:%S"))))  
         lock_stdout.release() 
     
     #I tell the output processes that I'm done
@@ -268,12 +270,12 @@ def extractor_process(q_todo, q_done, q_probl, lock_stdout, extraction_directory
     q_probl.put(['WORKER DONE'])
         
     lock_stdout.acquire()
-    sys.stdout.write(multiprocessing.current_process().name + ' (worker) job finished: exiting \n')  
+    printmsg(True, multiprocessing.current_process().name + ' (worker) job finished: exiting \n')  
     lock_stdout.release()    
         
 
 
-def done_extraction_process(q_done, num_active_workers, lock_stdout, extraction_directory):
+def done_extraction_process(q_done, num_active_workers, lock_stdout, extraction_directory, verbose):
     """Worker that takes care of the groups of bibcodes processed and writes the bibcodes to the related file
         NOTE: this can be also the process that submiths the upload processes to invenio
     """
@@ -290,11 +292,11 @@ def done_extraction_process(q_done, num_active_workers, lock_stdout, extraction_
             #otherwise I process the output:
             # I puth the bibcodes in the file of the done bibcodes
             if len(group_done[1]) > 0:
-                w2f = write_files.writeFile(extraction_directory)
+                w2f = write_files.writeFile(extraction_directory, verbose)
                 w2f.write_done_bibcodes_to_file(group_done[1])
                 
                 lock_stdout.acquire()
-                sys.stdout.write(multiprocessing.current_process().name + (' (done bibcodes worker) wrote done bibcodes for group %s \n' % group_done[0]))  
+                printmsg(True, multiprocessing.current_process().name + (' (done bibcodes worker) wrote done bibcodes for group %s \n' % group_done[0]))  
                 lock_stdout.release()
                 
             # I call the procedure to submit to invenio the process to upload the file
@@ -302,11 +304,11 @@ def done_extraction_process(q_done, num_active_workers, lock_stdout, extraction_
             
             
     lock_stdout.acquire()
-    sys.stdout.write(multiprocessing.current_process().name + ' (done bibcodes worker) job finished: exiting \n')  
+    printmsg(True, multiprocessing.current_process().name + ' (done bibcodes worker) job finished: exiting \n')  
     lock_stdout.release()
             
 
-def problematic_extraction_process(q_probl, num_active_workers, lock_stdout, extraction_directory):
+def problematic_extraction_process(q_probl, num_active_workers, lock_stdout, extraction_directory, verbose):
     """Worker that takes care of the bibcodes that couldn't be extracted and writes them to the related file"""
 
     while(True):
@@ -322,15 +324,15 @@ def problematic_extraction_process(q_probl, num_active_workers, lock_stdout, ext
             #otherwise I process the output:
             # I puth the bibcodes in the file of the problematic bibcodes
             if len(group_probl[1]) > 0:
-                w2f = write_files.writeFile(extraction_directory)
+                w2f = write_files.writeFile(extraction_directory, verbose)
                 w2f.write_problematic_bibcodes_to_file(group_probl[1])
                 
                 lock_stdout.acquire()
-                sys.stdout.write(multiprocessing.current_process().name + (' (problematic bibcodes worker) wrote problematic bibcodes for group %s \n' % group_probl[0]))  
+                printmsg(True, multiprocessing.current_process().name + (' (problematic bibcodes worker) wrote problematic bibcodes for group %s \n' % group_probl[0]))  
                 lock_stdout.release()
             
     lock_stdout.acquire()
-    sys.stdout.write(multiprocessing.current_process().name + ' (problematic bibcodes worker) job finished: exiting \n')  
+    printmsg(True, multiprocessing.current_process().name + ' (problematic bibcodes worker) job finished: exiting \n')  
     lock_stdout.release()
         
         
