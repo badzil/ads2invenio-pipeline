@@ -39,4 +39,4 @@ MARCXML_FILE_BASE_NAME = 'marcxml'
 NUMBER_OF_BIBCODES_PER_GROUP = 10000
 
 #maximum number of worker processes that have to run
-NUMBER_WORKERS = 6
+NUMBER_WORKERS = 4

@@ -24,6 +24,7 @@ import libxml2
 import itertools
 import time
 import os
+import gc
 
 import ads.ADSExports_alternative
 
@@ -196,10 +197,12 @@ class ADSRecordExtractor(object):
         file_obj.close()
         
         return extraction_name
-        
+       
 def extractor_process(q_todo, q_done, q_probl, lock_stdout, extraction_directory, extraction_name, verbose):
     """Worker function for the extraction of bibcodes from ADS
         it has been defined outside any class because it's more simple to treat with multiprocessing """
+    #I enable automatic garbage collection
+    #gc.enable()
     
     #while there is something to process I try to process
     while (True):
@@ -250,6 +253,7 @@ def extractor_process(q_todo, q_done, q_probl, lock_stdout, extraction_directory
             if not wrote_filename:
                 bibcodes_probl = bibcodes_probl + bibcodes_ok
                 bibcodes_ok = []
+            del w2f
         #otherwise I put all the bibcodes in the problematic
         else:
             bibcodes_probl = bibcodes_probl + bibcodes_ok
@@ -263,7 +267,10 @@ def extractor_process(q_todo, q_done, q_probl, lock_stdout, extraction_directory
              
         lock_stdout.acquire()
         printmsg(True, multiprocessing.current_process().name + (' (worker) finished to process group %s at %s \n' % (task_todo[0], time.strftime("%Y-%m-%d %H:%M:%S"))))  
-        lock_stdout.release() 
+        lock_stdout.release()
+        
+        #I force the garbage collection
+        #gc.collect()
     
     #I tell the output processes that I'm done
     q_done.put(['WORKER DONE'])
