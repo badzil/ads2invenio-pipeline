@@ -23,6 +23,7 @@ import shutil
 import settings
 import ads_record_extractor
 from global_functions import printmsg
+from errors import GenericError
 
 class pipelineManager(object):
     """Class that manages the extraction of bibcodes from ADS"""
@@ -37,7 +38,7 @@ class pipelineManager(object):
 
         #If there is a wrong mode, I will raise an exception
         if self.mode != 'full' and self.mode != 'update':
-            raise 'Wrong parameter: the extraction can be only full or update'
+            raise GenericError('Wrong parameter: the extraction can be only full or update')
         #otherwise I proceed
         else:
             #retrieve the list of bibcode to extract and the list of bibcodes to delete
@@ -146,7 +147,7 @@ class pipelineManager(object):
         try:
             shutil.copy(settings.BIBCODES_PRE, os.path.join(settings.BASE_OUTPUT_PATH, self.dirname, 'PRE_'+os.path.basename(settings.BIBCODES_PRE)))
         except:
-            raise 'Impossible to copy a mandatory file from %s to %s' % (settings.BIBCODES_PRE, os.path.join(settings.BASE_OUTPUT_PATH, self.dirname))
+            raise GenericError('Impossible to copy a mandatory file from %s to %s' % (settings.BIBCODES_PRE, os.path.join(settings.BASE_OUTPUT_PATH, self.dirname)))
         #then I extract the complete list
         all_bibcodes = self.read_bibcode_file(settings.BIBCODES_ALL)
         not_pre_bibcodes = list(set(all_bibcodes) - set(preprint_bibcodes))
@@ -236,7 +237,7 @@ class pipelineManager(object):
             bibfile = open(bibcode_file_path, "rU")
         except IOError:
             sys.stdout.write("Input file not readable \n")
-            raise 'Mandatory file not readable. Please check %s \n' % bibcode_file_path
+            raise GenericError('Mandatory file not readable. Please check %s \n' % bibcode_file_path)
         
         bibcodes_list = []
         

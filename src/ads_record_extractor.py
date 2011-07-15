@@ -22,9 +22,7 @@ import inspect
 import multiprocessing
 import libxml2
 import itertools
-import time
 import os
-#import gc
 
 import ads.ADSExports_alternative
 
@@ -32,6 +30,7 @@ import settings
 import write_files
 import xml_transformer
 from global_functions import printmsg
+from errors import GenericError
 
 
 class ADSRecordExtractor(object):
@@ -62,7 +61,7 @@ class ADSRecordExtractor(object):
                 self.process_bibcodes_to_delete()
             except Exception:
                 printmsg(True, "Unable to process the bibcodes to delete \n")
-                raise
+                raise GenericError("Unable to process the bibcodes to delete \n")
         
         ########################################################################
         #part where the bibcode to extract (new or update) are processed
@@ -130,7 +129,7 @@ class ADSRecordExtractor(object):
         if filename_delete:
             printmsg(self.verbose, "The MarcXML for the bibcode to delete has been written to the file %s \n" % filename_delete)
         else:
-            raise "ERROR: Impossible to create the file for the MarcXML of the bibcodes to delete"
+            raise GenericError("Impossible to create the file for the MarcXML of the bibcodes to delete")
         
         return True
     
@@ -238,26 +237,26 @@ def extractor_manager_process(bibtoprocess_splitted, extraction_directory, extra
             newprocess.start()
             additional_workers = additional_workers - 1
             lock_stdout.acquire()
-            printmsg(True, multiprocessing.current_process().name + '(Manager) Created new worker \n')  
+            printmsg(True, multiprocessing.current_process().name + ' (Manager) New worker created \n')  
             lock_stdout.release()
         elif death_reason[0] == 'QUEUE EMPTY':
             active_workers = active_workers - 1
             lock_stdout.acquire()
-            printmsg(verbose, multiprocessing.current_process().name + '(Manager) %s workers waiting to finish their job \n' % str(active_workers))  
+            printmsg(verbose, multiprocessing.current_process().name + ' (Manager) %s workers waiting to finish their job \n' % str(active_workers))  
             lock_stdout.release()
         elif death_reason[0] == 'PROBLEMBIBS DONE':
             additional_workers = additional_workers - 1
             lock_stdout.acquire()
-            printmsg(verbose, multiprocessing.current_process().name + '(Manager) %s additional workers waiting to finish their job \n' % str(additional_workers))  
+            printmsg(verbose, multiprocessing.current_process().name + ' (Manager) %s additional workers waiting to finish their job \n' % str(additional_workers))  
             lock_stdout.release()
         elif death_reason[0] == 'DONEBIBS DONE':
             additional_workers = additional_workers - 1
             lock_stdout.acquire()
-            printmsg(verbose, multiprocessing.current_process().name + '(Manager) %s additional workers waiting to finish their job \n' % str(additional_workers))  
+            printmsg(verbose, multiprocessing.current_process().name + ' (Manager) %s additional workers waiting to finish their job \n' % str(additional_workers))  
             lock_stdout.release()
     
     lock_stdout.acquire()
-    printmsg(verbose, multiprocessing.current_process().name + '(Manager) All the workers are done. Exiting... \n')  
+    printmsg(verbose, multiprocessing.current_process().name + ' (Manager) All the workers are done. Exiting... \n')  
     lock_stdout.release()
 
        
@@ -311,7 +310,7 @@ def extractor_process(q_todo, q_done, q_probl, lock_stdout, q_life, extraction_d
             #and I transform my object
             marcXML = tr.transform(xmlobj)
         except:
-            raise 'ERROR: Impossible to create a transformation object!'
+            raise GenericError('Impossible to transform the XML!')
         
         #if the transformation was ok, I write the file
         if marcXML:

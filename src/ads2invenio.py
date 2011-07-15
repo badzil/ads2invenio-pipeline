@@ -5,6 +5,7 @@ It parses the parameters and calls the global manager
 '''
 
 import pipeline_manager
+from errors import GenericError
 
 def parse_parameters():
     """Function that parse the parameters passed to the script"""
@@ -24,9 +25,9 @@ def parse_parameters():
         if options.mode == 'full' or options.mode == 'update':
             parameters['mode'] = options.mode
         else:
-            raise 'Wrong parameter: the extraction can be only full or update'
+            raise GenericError('Wrong parameter: the extraction can be only full or update')
     else:
-        raise 'Wrong parameter: the extraction can be only full or update'
+        raise GenericError('Wrong parameter: the extraction can be only full or update')
     
     if options.verbose:
         parameters['verbose'] = True

@@ -9,6 +9,7 @@ import inspect
 
 import settings
 from global_functions import printmsg
+from errors import GenericError
 
 class writeFile(object):
     """Class that writes the output files of the pipeline"""
@@ -47,7 +48,7 @@ class writeFile(object):
                 file_obj.write(bibcode+'\n')
             file_obj.close()
         except:
-            raise 'ERROR: impossible to write in the "bibcode done file" %s \n' % bibdone_filename
+            raise GenericError('Impossible to write in the "bibcode done file" %s \n' % bibdone_filename)
         
         del file_obj, bibcodes_list
         
@@ -85,7 +86,7 @@ class writeFile(object):
                 file_obj.write(bibcode+'\n')
             file_obj.close()
         except:
-            raise 'ERROR: impossible to write in the "bibcode done file" %s \n' % filepath   
+            raise GenericError('Impossible to write in the "bibcode done file" %s \n' % filepath)
 
         return True
     
@@ -101,7 +102,7 @@ class writeFile(object):
                 file_obj.write(bibcode+'\n')
             file_obj.close()
         except:
-            raise 'ERROR: impossible to write in the "bibcode problematic file" %s \n' % filepath   
+            raise GenericError('ERROR: impossible to write in the "bibcode problematic file" %s \n' % filepath)
 
         return True 
 
