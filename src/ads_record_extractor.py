@@ -238,7 +238,7 @@ def extractor_manager_process(bibtoprocess_splitted, extraction_directory, extra
             newprocess.start()
             additional_workers = additional_workers - 1
             lock_stdout.acquire()
-            printmsg(verbose, multiprocessing.current_process().name + '(Manager) Created new worker \n')  
+            printmsg(True, multiprocessing.current_process().name + '(Manager) Created new worker \n')  
             lock_stdout.release()
         elif death_reason[0] == 'QUEUE EMPTY':
             active_workers = active_workers - 1
