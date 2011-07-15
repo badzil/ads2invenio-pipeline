@@ -24,7 +24,7 @@ import libxml2
 import itertools
 import time
 import os
-import gc
+#import gc
 
 import ads.ADSExports_alternative
 
@@ -51,7 +51,7 @@ class ADSRecordExtractor(object):
     def extract(self):
         """manager of the extraction"""
         printmsg(self.verbose, "In function %s.%s \n" % (self.__class__.__name__, inspect.stack()[0][3])) 
-        
+
         ########################################################################
         #part where the bibcode to delete are processed
         
@@ -67,55 +67,15 @@ class ADSRecordExtractor(object):
         ########################################################################
         #part where the bibcode to extract (new or update) are processed
         
-        #a queue for the bibcodes to process
-        q_todo = multiprocessing.Queue()
-        #a queue for the bibcodes processed
-        q_done = multiprocessing.Queue()
-        #a queue for the bibcodes with problems
-        q_probl = multiprocessing.Queue()
-        #a lock to write in stdout
-        lock_stdout = multiprocessing.Lock()
-        
         #I split the list of bibcodes to process in multiple groups
         bibtoprocess_splitted = self.grouper(settings.NUMBER_OF_BIBCODES_PER_GROUP, self.bibcodes_to_extract_list)
 
-        #I split all the bibcodes in groups of NUMBER_OF_BIBCODES_PER_GROUP and I put them in the todo queue
-        counter = 0 #I need the counter to uniquely identify each group
-        for grp in bibtoprocess_splitted:
-            counter += 1
-            q_todo.put([str(counter).zfill(7), grp])
-        
-        #I define the number of processes to run
-        number_of_processes = settings.NUMBER_WORKERS #in production should be a part of multiprocessing.cpu_count 
-        
-        #I define the worker processes
-        processes = [multiprocessing.Process(target=extractor_process, args=(q_todo, q_done, q_probl, lock_stdout, self.extraction_directory, self.extraction_name, self.verbose)) for i in range(number_of_processes)]
-        
-        #I append to the todo queue a list of commands to stop the worker processes
-        for i in range(number_of_processes):
-            q_todo.put(['STOP', ''])
-        
-        #I define a "done bibcode" worker
-        donebib = multiprocessing.Process(target=done_extraction_process, args=(q_done, number_of_processes, lock_stdout, self.extraction_directory, self.verbose))
-        #I define a "problematic bibcode" worker
-        problbib = multiprocessing.Process(target=problematic_extraction_process, args=(q_probl, number_of_processes, lock_stdout, self.extraction_directory, self.verbose))
-            
-        #I start the worker processes
-        for p in processes:
-            p.start()
-        #and the output handlers
-        donebib.start()
-        problbib.start()
-        
-        #I join all the processes
-        for p in processes:
-            p.join()
-        donebib.join()
-        problbib.join()
-        
-        #print '####################### GETTING RESULTS'
-        #for i in range(len(bibtoprocess_splitted)):
-        #    print q_done.get()
+        #I define a manager for the workers
+        manager = multiprocessing.Process(target=extractor_manager_process, args=(bibtoprocess_splitted, self.extraction_directory, self.extraction_name, self.verbose))        
+        #I start the process
+        manager.start()
+        #I join the process
+        manager.join()
         
         printmsg(True, "Extraction ended! \n") 
         
@@ -197,21 +157,129 @@ class ADSRecordExtractor(object):
         file_obj.close()
         
         return extraction_name
+
+
+def extractor_manager_process(bibtoprocess_splitted, extraction_directory, extraction_name, verbose):
+    """Process that takes care of managing all the other worker processes
+        this process also creates new worker processes when the existing ones reach the maximum number of groups of bibcode to process 
+    """
+    #a queue for the bibcodes to process
+    q_todo = multiprocessing.Queue()
+    #a queue for the bibcodes processed
+    q_done = multiprocessing.Queue()
+    #a queue for the bibcodes with problems
+    q_probl = multiprocessing.Queue()
+    #a lock to write in stdout
+    lock_stdout = multiprocessing.Lock()
+    #a queue for the messages from the workers that have to tell the manager when they reach the maximum number of chunks to process
+    q_life = multiprocessing.Queue()
+    
+    lock_stdout.acquire()
+    printmsg(verbose, multiprocessing.current_process().name + ' (Manager) Filling the queue with the tasks \n')  
+    lock_stdout.release()
+    
+    #I split all the bibcodes in groups of NUMBER_OF_BIBCODES_PER_GROUP and I put them in the todo queue
+    counter = 0 #I need the counter to uniquely identify each group
+    for grp in bibtoprocess_splitted:
+        counter += 1
+        q_todo.put([str(counter).zfill(7), grp])
+    
+    lock_stdout.acquire()
+    printmsg(verbose, multiprocessing.current_process().name + ' (Manager) Creating the first pool of workers \n')  
+    lock_stdout.release()
+    
+    #I define the number of processes to run
+    number_of_processes = settings.NUMBER_WORKERS #in production should be a part of multiprocessing.cpu_count 
+    
+    #I define the worker processes
+    processes = [multiprocessing.Process(target=extractor_process, args=(q_todo, q_done, q_probl, lock_stdout, q_life, extraction_directory, extraction_name, verbose)) for i in range(number_of_processes)]
+    
+    #I append to the todo queue a list of commands to stop the worker processes
+    for i in range(number_of_processes):
+        q_todo.put(['STOP', ''])
+    
+    lock_stdout.acquire()
+    printmsg(verbose, multiprocessing.current_process().name + ' (Manager) Creating the output workers \n')  
+    lock_stdout.release()
+    
+    #I define a "done bibcode" worker
+    donebib = multiprocessing.Process(target=done_extraction_process, args=(q_done, number_of_processes, lock_stdout, q_life, extraction_directory, verbose))
+    #I define a "problematic bibcode" worker
+    problbib = multiprocessing.Process(target=problematic_extraction_process, args=(q_probl, number_of_processes, lock_stdout, q_life, extraction_directory, verbose))
+    
+    lock_stdout.acquire()
+    printmsg(verbose, multiprocessing.current_process().name + ' (Manager) Starting all the workers \n')  
+    lock_stdout.release()
+        
+    #I start the worker processes
+    for p in processes:
+        p.start()
+    #and the output handlers
+    donebib.start()
+    problbib.start()
+    
+    #I join all the processes
+    #for p in processes:
+    #    p.join()
+    #donebib.join()
+    #problbib.join()
+    
+    #the I have to wait for the workers that have to tell me if they reached the maximum amount of chunk to process or if the extraction ended
+    #in the first case I have to start another process
+    #in the second I have to decrease the counter of active workers
+    active_workers = settings.NUMBER_WORKERS
+    additional_workers = 2
+    while active_workers > 0 or additional_workers > 0:
+        #I get the message from the worker
+        death_reason = q_life.get()
+        #if the reason of the death is that the process reached the max number of groups to process, then I have to start another one
+        if death_reason[0] == 'MAX LIFE REACHED':
+            newprocess = multiprocessing.Process(target=extractor_process, args=(q_todo, q_done, q_probl, lock_stdout, q_life, extraction_directory, extraction_name, verbose))
+            newprocess.start()
+            additional_workers = additional_workers - 1
+            lock_stdout.acquire()
+            printmsg(verbose, multiprocessing.current_process().name + '(Manager) Created new worker \n')  
+            lock_stdout.release()
+        elif death_reason[0] == 'QUEUE EMPTY':
+            active_workers = active_workers - 1
+            lock_stdout.acquire()
+            printmsg(verbose, multiprocessing.current_process().name + '(Manager) %s workers waiting to finish their job \n' % str(active_workers))  
+            lock_stdout.release()
+        elif death_reason[0] == 'PROBLEMBIBS DONE':
+            additional_workers = additional_workers - 1
+            lock_stdout.acquire()
+            printmsg(verbose, multiprocessing.current_process().name + '(Manager) %s additional workers waiting to finish their job \n' % str(additional_workers))  
+            lock_stdout.release()
+        elif death_reason[0] == 'DONEBIBS DONE':
+            additional_workers = additional_workers - 1
+            lock_stdout.acquire()
+            printmsg(verbose, multiprocessing.current_process().name + '(Manager) %s additional workers waiting to finish their job \n' % str(additional_workers))  
+            lock_stdout.release()
+    
+    lock_stdout.acquire()
+    printmsg(verbose, multiprocessing.current_process().name + '(Manager) All the workers are done. Exiting... \n')  
+    lock_stdout.release()
+
        
-def extractor_process(q_todo, q_done, q_probl, lock_stdout, extraction_directory, extraction_name, verbose):
+def extractor_process(q_todo, q_done, q_probl, lock_stdout, q_life, extraction_directory, extraction_name, verbose):
     """Worker function for the extraction of bibcodes from ADS
         it has been defined outside any class because it's more simple to treat with multiprocessing """
-    #I enable automatic garbage collection
-    #gc.enable()
-    
-    #while there is something to process I try to process
-    while (True):
-                
+    #I get the maximum number of groups I can process
+    max_num_groups = settings.MAX_NUMBER_OF_GROUP_TO_PROCESS
+    #variable used to know if I'm exiting because the queue is empty or because I reached the maximum number of groups to process
+    queue_empty = False
+      
+    #while there is something to process or I reach the maximum number of groups I can process,  I try to process
+    for grpnum in range(max_num_groups):
+        
         task_todo = q_todo.get()
         if task_todo[0] == 'STOP':
+            
+            queue_empty = True
+            #I exit the loop
             break
         
-        #I print when I'm startring the extraction
+        #I print when I'm starting the extraction
         lock_stdout.acquire()
         printmsg(True, multiprocessing.current_process().name + (' (worker) starting to process group %s at %s \n' % (task_todo[0], time.strftime("%Y-%m-%d %H:%M:%S"))))  
         lock_stdout.release() 
@@ -269,20 +337,27 @@ def extractor_process(q_todo, q_done, q_probl, lock_stdout, extraction_directory
         printmsg(True, multiprocessing.current_process().name + (' (worker) finished to process group %s at %s \n' % (task_todo[0], time.strftime("%Y-%m-%d %H:%M:%S"))))  
         lock_stdout.release()
         
-        #I force the garbage collection
-        #gc.collect()
     
-    #I tell the output processes that I'm done
-    q_done.put(['WORKER DONE'])
-    q_probl.put(['WORKER DONE'])
-        
-    lock_stdout.acquire()
-    printmsg(True, multiprocessing.current_process().name + ' (worker) job finished: exiting \n')  
-    lock_stdout.release()    
+    if queue_empty:
+        #I tell the output processes that I'm done
+        q_done.put(['WORKER DONE'])
+        q_probl.put(['WORKER DONE'])
+        #I tell the manager that I'm dying because the queue is empty
+        q_life.put(['QUEUE EMPTY'])
+        #I set a variable to skip the messages outside the loop
+        lock_stdout.acquire()
+        printmsg(True, multiprocessing.current_process().name + ' (worker) Queue empty: exiting \n')  
+        lock_stdout.release()
+    else:
+        #I tell the manager that I'm dying because I reached the maximum amount of group to process
+        q_life.put(['MAX LIFE REACHED'])
+        lock_stdout.acquire()
+        printmsg(True, multiprocessing.current_process().name + ' (worker) Maximum amount of groups of bibcodes reached: exiting \n')  
+        lock_stdout.release()    
         
 
 
-def done_extraction_process(q_done, num_active_workers, lock_stdout, extraction_directory, verbose):
+def done_extraction_process(q_done, num_active_workers, lock_stdout, q_life, extraction_directory, verbose):
     """Worker that takes care of the groups of bibcodes processed and writes the bibcodes to the related file
         NOTE: this can be also the process that submiths the upload processes to invenio
     """
@@ -309,13 +384,16 @@ def done_extraction_process(q_done, num_active_workers, lock_stdout, extraction_
             # I call the procedure to submit to invenio the process to upload the file
             filename_path = group_done[2]
             
+    
+    #I tell the manager that I'm done and I'm exiting
+    q_life.put(['DONEBIBS DONE'])
             
     lock_stdout.acquire()
     printmsg(True, multiprocessing.current_process().name + ' (done bibcodes worker) job finished: exiting \n')  
     lock_stdout.release()
             
 
-def problematic_extraction_process(q_probl, num_active_workers, lock_stdout, extraction_directory, verbose):
+def problematic_extraction_process(q_probl, num_active_workers, lock_stdout, q_life, extraction_directory, verbose):
     """Worker that takes care of the bibcodes that couldn't be extracted and writes them to the related file"""
 
     while(True):
@@ -337,6 +415,9 @@ def problematic_extraction_process(q_probl, num_active_workers, lock_stdout, ext
                 lock_stdout.acquire()
                 printmsg(True, multiprocessing.current_process().name + (' (problematic bibcodes worker) wrote problematic bibcodes for group %s \n' % group_probl[0]))  
                 lock_stdout.release()
+    
+    #I tell the manager that I'm done and I'm exiting
+    q_life.put(['PROBLEMBIBS DONE'])
             
     lock_stdout.acquire()
     printmsg(True, multiprocessing.current_process().name + ' (problematic bibcodes worker) job finished: exiting \n')  
