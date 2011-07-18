@@ -25,12 +25,15 @@ import ads_record_extractor
 from global_functions import printmsg
 from errors import GenericError
 
-class pipelineManager(object):
+class PipelineManager(object):
     """Class that manages the extraction of bibcodes from ADS"""
     def __init__(self, mode, verbose):
         """Constructor"""
         self.mode = mode
         self.verbose = verbose
+        #I define some empty variables
+        self.dirname = ''
+        self.lastest_extr_dir = ''
     
     def manage(self):
         """public function"""
@@ -82,7 +85,7 @@ class pipelineManager(object):
             printmsg(self.verbose, "Last extraction was not fine: recovering \n")
             #I retrieve the bibcodes missing from the last extraction
             self.dirname = self.lastest_extr_dir
-            return self.remaining_bibcode_to_extract_delete(os.path.join(settings.BASE_OUTPUT_PATH, self.lastest_extr_dir))
+            return self.rem_bibs_to_extr_del(os.path.join(settings.BASE_OUTPUT_PATH, self.lastest_extr_dir))
             
             
     def check_last_extraction(self):
@@ -119,12 +122,11 @@ class pipelineManager(object):
                 if settings.BASE_FILES[name] not in elements_from_last_extraction:
                     printmsg(self.verbose, "Checked last extraction: status returned NOT VALID DIRECTORY CONTENT \n")
                     return 'NOT VALID DIRECTORY CONTENT'
-            del name
         
             #if I pass all this checks the content is basically fine
             #But then I have to check if the lists of bibcodes are consistent: bibcodes extracted + bibcodes with problems = sum(bibcodes to extract)
             printmsg(self.verbose, "Checking if the list of bibcodes actually extracted is equal to the one I had to extract \n")
-            bibcodes_still_pending = self.extract_diff_bibcodes_from_extraction(os.path.join(settings.BASE_OUTPUT_PATH, self.lastest_extr_dir))
+            bibcodes_still_pending = self.extr_diff_bibs_from_extraction(os.path.join(settings.BASE_OUTPUT_PATH, self.lastest_extr_dir))
             if len(bibcodes_still_pending) == 0:
                 printmsg(self.verbose, "All the bibcodes from the last extraction have been processed \n")
             else:
@@ -177,9 +179,9 @@ class pipelineManager(object):
         """Method that extracts the list of bibcodes to update"""
         printmsg(self.verbose, "In function %s.%s \n" % (self.__class__.__name__, inspect.stack()[0][3]))
         #I return the list of bibcodes to extract and the list of bibcodes to delete
-        return ([],[])
+        return ([], [])
     
-    def extract_diff_bibcodes_from_extraction(self, extraction_dir):
+    def extr_diff_bibs_from_extraction(self, extraction_dir):
         """method that extracts the list of bibcodes not processed from a directory used for an extraction"""
         printmsg(self.verbose, "In function %s.%s \n" % (self.__class__.__name__, inspect.stack()[0][3])) 
         #first I extract the list of bibcodes that I had to extract
@@ -195,7 +197,7 @@ class pipelineManager(object):
         return bibcodes_remaining
                    
         
-    def remaining_bibcode_to_extract_delete(self, extraction_dir):
+    def rem_bibs_to_extr_del(self, extraction_dir):
         """method that finds the bibcodes to extract and to delete not processed in an extraction """
         printmsg(self.verbose, "In function %s.%s \n" % (self.__class__.__name__, inspect.stack()[0][3]))
         #first I extract the list of bibcodes that I had to extract
