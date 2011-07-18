@@ -11,6 +11,7 @@ class GenericError(Error):
     def __init__(self, field_desc):
         """ Constructor: initialize the variable containing the \
         description of the field with errors"""
+        super(GenericError, self).__init__()
         self.field_desc = field_desc
     def __str__(self):
         message = "ERROR: %s \n" % self.field_desc

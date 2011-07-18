@@ -9,8 +9,9 @@ import inspect
 
 import settings
 from global_functions import printmsg
+from errors import GenericError
 
-class xmlTransformer(object):
+class XmlTransformer(object):
     """ Class that transform an ADS xml in MarcXML"""
         
     def __init__(self, verbose):
@@ -18,6 +19,8 @@ class xmlTransformer(object):
         self.verbose = verbose
         #definition of the stilesheet
         self.stylesheet = settings.STYLESHEET_PATH
+        #I initialize the style sheet object
+        self.style_obj = None
     
     def init_stylesheet(self):
         """ Method that initialize the transformation engine """
@@ -26,7 +29,7 @@ class xmlTransformer(object):
         try:
             self.style_obj = libxslt.parseStylesheetDoc(libxml2.parseFile(self.stylesheet))
         except:
-            raise "ERROR: problem loading stylesheet \n"
+            raise GenericError("ERROR: problem loading stylesheet \n")
         
         return True
     

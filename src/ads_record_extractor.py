@@ -123,7 +123,7 @@ class ADSRecordExtractor(object):
         del doc
         
         #I write to the file
-        w2f = write_files.writeFile(self.extraction_directory, self.verbose)
+        w2f = write_files.WriteFile(self.extraction_directory, self.verbose)
         filename_delete = w2f.write_bibcodes_to_delete_file(marcxml_string, self.bibcodes_to_delete_list, self.extraction_name)
         
         if filename_delete:
@@ -306,7 +306,7 @@ def extractor_process(q_todo, q_done, q_probl, lock_stdout, q_life, extraction_d
         
         try:
             #I define a transformation object
-            transf = xml_transformer.xmlTransformer(verbose)
+            transf = xml_transformer.XmlTransformer(verbose)
             #and I transform my object
             marcxml = transf.transform(xmlobj)
         except:
@@ -314,8 +314,8 @@ def extractor_process(q_todo, q_done, q_probl, lock_stdout, q_life, extraction_d
         
         #if the transformation was ok, I write the file
         if marcxml:
-            w2f = write_files.writeFile(extraction_directory, verbose)
-            wrote_filename = w2f.write_marcXML_file(marcxml, task_todo[0], extraction_name)
+            w2f = write_files.WriteFile(extraction_directory, verbose)
+            wrote_filename = w2f.write_marcxml_file(marcxml, task_todo[0], extraction_name)
             #if the writing of the xml is wrong I consider all the bibcodes problematic
             if not wrote_filename:
                 bibcodes_probl = bibcodes_probl + bibcodes_ok
@@ -373,7 +373,7 @@ def done_extraction_process(q_done, num_active_workers, lock_stdout, q_life, ext
             #otherwise I process the output:
             # I puth the bibcodes in the file of the done bibcodes
             if len(group_done[1]) > 0:
-                w2f = write_files.writeFile(extraction_directory, verbose)
+                w2f = write_files.WriteFile(extraction_directory, verbose)
                 w2f.write_done_bibcodes_to_file(group_done[1])
                 
                 lock_stdout.acquire()
@@ -408,8 +408,8 @@ def problematic_extraction_process(q_probl, num_active_workers, lock_stdout, q_l
             #otherwise I process the output:
             # I puth the bibcodes in the file of the problematic bibcodes
             if len(group_probl[1]) > 0:
-                w2f = write_files.writeFile(extraction_directory, verbose)
-                w2f.write_problematic_bibcodes_to_file(group_probl[1])
+                w2f = write_files.WriteFile(extraction_directory, verbose)
+                w2f.write_problem_bibcodes_to_file(group_probl[1])
                 
                 lock_stdout.acquire()
                 printmsg(True, multiprocessing.current_process().name + (' (problematic bibcodes worker) wrote problematic bibcodes for group %s \n' % group_probl[0]))  

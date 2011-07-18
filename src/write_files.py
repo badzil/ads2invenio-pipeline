@@ -11,7 +11,7 @@ import settings
 from global_functions import printmsg
 from errors import GenericError
 
-class writeFile(object):
+class WriteFile(object):
     """Class that writes the output files of the pipeline"""
     
     def __init__(self, dirname, verbose):
@@ -54,7 +54,7 @@ class writeFile(object):
         
         return filepath
 
-    def write_marcXML_file(self, xmlstring, taskname, extraction_name):
+    def write_marcxml_file(self, xmlstring, taskname, extraction_name):
         """method that writes the marcXML to a file naming it in the proper way"""
         printmsg(self.verbose, "In function %s.%s \n" % (self.__class__.__name__, inspect.stack()[0][3]))
         
@@ -90,7 +90,7 @@ class writeFile(object):
 
         return True
     
-    def write_problematic_bibcodes_to_file(self, bibcodes_list):
+    def write_problem_bibcodes_to_file(self, bibcodes_list):
         """Method that writes a list of bibcodes in the file of the done bibcodes"""
         printmsg(self.verbose, "In function %s.%s \n" % (self.__class__.__name__, inspect.stack()[0][3]))
         

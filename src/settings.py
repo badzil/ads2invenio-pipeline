@@ -3,10 +3,10 @@ Settings file
 '''
 
 from os.path import dirname, abspath
-basedir = dirname(abspath(__file__)) + '/'
+BASEDIR = dirname(abspath(__file__)) + '/'
 
 #base path for the output of the procedure
-BASE_OUTPUT_PATH = basedir + 'out'
+BASE_OUTPUT_PATH = BASEDIR + 'out'
 
 #list of files that MUST be in each output directory
 BASE_FILES = {'new':'bibcodes_to_extract_new_mod.dat', 'del':'bibcodes_to_extract_del.dat', 'done':'bibcodes_extracted.dat', 'prob':'bibcodes_with_problems.dat'}
@@ -28,7 +28,7 @@ BIBCODES_PRE = '/proj/ads/abstracts/pre/load/latest/index.status'
 BIBCODES_ALL = '/proj/ads/abstracts/config/bib2accno.dat'
 
 #style sheet path
-STYLESHEET_PATH = basedir + 'xsl/adsXml2MarkXml.xsl'
+STYLESHEET_PATH = BASEDIR + 'xsl/adsXml2MarkXml.xsl'
 
 #base name for the file of bibcodes to delete
 BIBCODE_TO_DELETE_OUT_NAME = 'AAA_bibcode_to_delete'
