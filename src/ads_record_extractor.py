@@ -333,7 +333,7 @@ def extractor_process(q_todo, q_done, q_probl, lock_stdout, q_life, extraction_d
         q_probl.put([task_todo[0], bibcodes_probl])
              
         lock_stdout.acquire()
-        printmsg(True, multiprocessing.current_process().name + (' (worker) finished to process group %s at %s \n' % task_todo[0]))  
+        printmsg(True, multiprocessing.current_process().name + (' (worker) finished to process group %s \n' % task_todo[0]))  
         lock_stdout.release()
         
     
