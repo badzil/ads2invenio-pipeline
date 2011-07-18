@@ -4,12 +4,13 @@ Main module
 It parses the parameters and calls the global manager
 '''
 
+from optparse import OptionParser
+
 import pipeline_manager
 from errors import GenericError
 
 def parse_parameters():
     """Function that parse the parameters passed to the script"""
-    from optparse import OptionParser
     parser = OptionParser()
     
     parser.add_option("-m", "--mode", dest="mode", help="Specify the method of extraction (full or update) ", metavar="MODEVALUE")
