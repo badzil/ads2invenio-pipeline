@@ -306,16 +306,16 @@ def extractor_process(q_todo, q_done, q_probl, lock_stdout, q_life, extraction_d
         
         try:
             #I define a transformation object
-            tr = xml_transformer.xmlTransformer(verbose)
+            transf = xml_transformer.xmlTransformer(verbose)
             #and I transform my object
-            marcXML = tr.transform(xmlobj)
+            marcxml = transf.transform(xmlobj)
         except:
             raise GenericError('Impossible to transform the XML!')
         
         #if the transformation was ok, I write the file
-        if marcXML:
+        if marcxml:
             w2f = write_files.writeFile(extraction_directory, verbose)
-            wrote_filename = w2f.write_marcXML_file(marcXML, task_todo[0], extraction_name)
+            wrote_filename = w2f.write_marcXML_file(marcxml, task_todo[0], extraction_name)
             #if the writing of the xml is wrong I consider all the bibcodes problematic
             if not wrote_filename:
                 bibcodes_probl = bibcodes_probl + bibcodes_ok
