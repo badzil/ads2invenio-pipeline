@@ -44,8 +44,8 @@ def main():
     parameters = parse_parameters()
     
     #I call the global manager
-    gm = pipeline_manager.pipelineManager(parameters['mode'], parameters['verbose'])
-    gm.manage()
+    genm = pipeline_manager.pipelineManager(parameters['mode'], parameters['verbose'])
+    genm.manage()
     
 if __name__ == "__main__":
     main()
