@@ -24,6 +24,7 @@ import settings
 import ads_record_extractor
 from global_functions import printmsg
 from errors import GenericError
+import timestamp_manager
 
 class PipelineManager(object):
     """Class that manages the extraction of bibcodes from ADS"""
@@ -178,8 +179,27 @@ class PipelineManager(object):
     def extract_update_list_of_bibcodes(self):
         """Method that extracts the list of bibcodes to update"""
         printmsg(self.verbose, "In function %s.%s \n" % (self.__class__.__name__, inspect.stack()[0][3]))
+        
+        records_added, records_modified, records_deleted = timestamp_manager.get_records_status(self.verbose)
+        
+        bibcodes_to_extract = list(records_added) + list(records_modified)
+        bibcodes_to_extract.sort()
+        bibcodes_to_delete = list(records_deleted)
+        bibcodes_to_delete.sort()
+        #then I write all these bibcodes to the proper files
+        #first the one to extract
+        bibcode_file = open(os.path.join(settings.BASE_OUTPUT_PATH, self.dirname, settings.BASE_FILES['new']), 'a')
+        for bibcode in bibcodes_to_extract:
+            bibcode_file.write(bibcode + '\n')
+        bibcode_file.close()
+        #then the one to delete
+        bibcode_file = open(os.path.join(settings.BASE_OUTPUT_PATH, self.dirname, settings.BASE_FILES['del']), 'a')
+        for bibcode in bibcodes_to_delete:
+            bibcode_file.write(bibcode + '\n')
+        bibcode_file.close()
+        
         #I return the list of bibcodes to extract and the list of bibcodes to delete
-        return ([], [])
+        return (bibcodes_to_extract, bibcodes_to_delete)
     
     def extr_diff_bibs_from_extraction(self, extraction_dir):
         """method that extracts the list of bibcodes not processed from a directory used for an extraction"""

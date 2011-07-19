@@ -10,6 +10,7 @@ bibcodes:
 """
 
 import sys
+sys.path.append('/proj/adsx/invenio/lib/python/')
 
 from invenio.dbquery import run_sql
 from invenio.search_engine import get_mysql_recid_from_aleph_sysno

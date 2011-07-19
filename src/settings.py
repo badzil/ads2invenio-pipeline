@@ -36,10 +36,10 @@ BIBCODE_TO_DELETE_OUT_NAME = 'AAA_bibcode_to_delete'
 MARCXML_FILE_BASE_NAME = 'marcxml'
 
 #maximum number of bibcodes per group of extraction -> it means that this is also the maximum number of bibcodes per file of marcxml
-NUMBER_OF_BIBCODES_PER_GROUP = 10000
+NUMBER_OF_BIBCODES_PER_GROUP = 1000
 
 #maximum number of worker processes that have to run
-NUMBER_WORKERS = 6
+NUMBER_WORKERS = 3
 
 #maximum number of groups of bibcodes that each worker can process before dying
 MAX_NUMBER_OF_GROUP_TO_PROCESS = 3

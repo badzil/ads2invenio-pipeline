@@ -223,7 +223,7 @@ def extractor_manager_process(bibtoprocess_splitted, extraction_directory, extra
     #donebib.join()
     #problbib.join()
     
-    #the I have to wait for the workers that have to tell me if they reached the maximum amount of chunk to process or if the extraction ended
+    #then I have to wait for the workers that have to tell me if they reached the maximum amount of chunk to process or if the extraction ended
     #in the first case I have to start another process
     #in the second I have to decrease the counter of active workers
     active_workers = settings.NUMBER_WORKERS
