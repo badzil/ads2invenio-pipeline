@@ -292,6 +292,11 @@ def extractor_process(q_todo, q_done, q_probl, lock_stdout, q_life, extraction_d
         #I define a ADSEXPORT object
         recs = ads.ADSExports_alternative.ADSRecords('full', 'XML')
         
+        # I define a maximum amount of bibcodes I can skip per each cicle: the number of bibcodes per group / 10 (minimum 500)
+        # if i skip more than this amount it means that there is something 
+        # wrong with the access to the data and it's better to stop everything
+        max_number_of_bibs_to_skip = max(settings.NUMBER_OF_BIBCODES_PER_GROUP / 10, 500)
+        
         for bibcode in task_todo[1]:
             try:
                 recs.addRecord(bibcode)
@@ -299,6 +304,17 @@ def extractor_process(q_todo, q_done, q_probl, lock_stdout, q_life, extraction_d
             except:
                 printmsg(True, 'ERROR: problem retrieving the bibcode "%s" \n' % bibcode)
                 bibcodes_probl.append(bibcode)
+                max_number_of_bibs_to_skip = max_number_of_bibs_to_skip - 1
+            #If i=I reach 0 It means that I skipped 1k bibcodes and probably there is a problem: so I simulate an exit for empty queue
+            if max_number_of_bibs_to_skip == 0:
+                break
+        #I exit from both loops
+        if max_number_of_bibs_to_skip == 0:
+            lock_stdout.acquire()
+            printmsg(True, multiprocessing.current_process().name + (' (worker)  Detected possible error with ADS data access: skipped %s bibcodes in one group \n' % max_number_of_bibs_to_skip))  
+            lock_stdout.release()
+            queue_empty = True
+            break
         
         #I extract the object I created
         xmlobj = recs.export()
@@ -382,6 +398,8 @@ def done_extraction_process(q_done, num_active_workers, lock_stdout, q_life, ext
                 
             # I call the procedure to submit to invenio the process to upload the file
             filename_path = group_done[2]
+            
+            #invenio.bibtask.task_low_level_submission http://bit.ly/nnQZbs
             
     
     #I tell the manager that I'm done and I'm exiting
