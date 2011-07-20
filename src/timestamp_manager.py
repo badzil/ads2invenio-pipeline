@@ -10,7 +10,7 @@ bibcodes:
 """
 
 import sys
-sys.path.append('/proj/adsx/invenio/lib/python/')
+sys.path.append('/proj/adsx/invenio26/lib/python/')
 
 from invenio.dbquery import run_sql
 from invenio.search_engine import get_mysql_recid_from_aleph_sysno
@@ -39,22 +39,22 @@ def get_records_status(verbose=False):
     records_modified = []
     records_deleted = []
 
-    printmsg(verbose, 'Getting ADS timestamps.')
+    printmsg(verbose, 'Getting ADS timestamps. \n')
     ads_timestamps = _get_ads_timestamps()
-    printmsg(verbose, 'Getting ADS bibcodes.')
+    printmsg(verbose, 'Getting ADS bibcodes. \n')
     ads_bibcodes = set(ads_timestamps.keys())
-    printmsg(verbose, 'Getting Invenio bibcodes.')
+    printmsg(verbose, 'Getting Invenio bibcodes. \n')
     invenio_bibcodes = _get_invenio_bibcodes()
 
-    printmsg(verbose, 'Deducting the added records.')
+    printmsg(verbose, 'Deducting the added records. \n')
     records_added = ads_bibcodes - invenio_bibcodes
     printmsg(verbose, '    %d records to add.' % len(records_added))
-    printmsg(verbose, 'Deducting the deleted records.')
+    printmsg(verbose, 'Deducting the deleted records. \n')
     records_deleted = invenio_bibcodes - ads_bibcodes
     printmsg(verbose, '    %d records to delete.' % len(records_deleted))
 
     records_to_check = invenio_bibcodes - records_deleted
-    printmsg(verbose, 'Checking timestamps for %d records.' %
+    printmsg(verbose, 'Checking timestamps for %d records. \n' %
             len(records_to_check))
 
     # TODO: This can probably be sped up by working with chunks of bibcodes
@@ -66,8 +66,8 @@ def get_records_status(verbose=False):
         invenio_timestamp = get_fieldvalues(invenio_recid, '995__a')
         if not invenio_timestamp:
             # Maybe we could add instead of exiting.
-            print >> sys.stderr, ('Problem: Record %s in Invenio does not '
-                    'have a timestamp.' % bibcode)
+            printmsg(True, 'ERROR: Record %s in Invenio does not '
+                    'have a timestamp. \n' % bibcode)
             sys.exit(1)
         elif invenio_timestamp != ads_timestamp:
             records_modified.append(bibcode)
