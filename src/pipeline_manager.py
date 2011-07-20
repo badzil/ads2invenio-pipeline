@@ -152,7 +152,8 @@ class PipelineManager(object):
         except:
             raise GenericError('Impossible to copy a mandatory file from %s to %s' % (settings.BIBCODES_PRE, os.path.join(settings.BASE_OUTPUT_PATH, self.dirname)))
         #then I extract the complete list
-        all_bibcodes = self.read_bibcode_file(settings.BIBCODES_ALL)
+        #all_bibcodes = self.read_bibcode_file(settings.BIBCODES_ALL)
+        all_bibcodes = self.get_all_bibcodes()
         not_pre_bibcodes = list(set(all_bibcodes) - set(preprint_bibcodes))
         not_pre_bibcodes.sort()
         
@@ -247,7 +248,20 @@ class PipelineManager(object):
             bibcodes_to_extract_remaining =  remaining_preprint + other_remaining
         
         return (bibcodes_to_extract_remaining, bibcodes_to_delete_remaining)
+    
+    def get_all_bibcodes(self):
+        """Method that retrieves the complete list of bibcodes"""
+        printmsg(self.verbose, "In function %s.%s \n" % (self.__class__.__name__, inspect.stack()[0][3]))
+        # Timestamps ordered by increasing order of importance.
+        timestamp_files_hierarchy = [settings.BIBCODES_GEN, settings.BIBCODES_PRE, settings.BIBCODES_PHY, settings.BIBCODES_AST ]
         
+        bibcodes = set([])
+        for filename in timestamp_files_hierarchy:
+            db_bibcodes = self.read_bibcode_file(filename)
+            bibcodes = bibcodes.union(set(db_bibcodes))
+        bibcodes_list = list(bibcodes)
+        bibcodes_list.sort()
+        return bibcodes_list
     
     def read_bibcode_file(self, bibcode_file_path):
         """ Function that read the list of bibcodes in one file:

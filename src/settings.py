@@ -17,15 +17,15 @@ EXTRACTION_BASE_NAME = 'extraction_'
 
 #files with list of bibcodes and timestamps
 #AST
-BIBCODES_AST = '/proj/ads/abstracts/ast/load/latest/index.status'
+BIBCODES_AST = '/proj/ads/abstracts/ast/load/current/index.status'
 #PHY
-BIBCODES_PHY = '/proj/ads/abstracts/phy/load/latest/index.status'
+BIBCODES_PHY = '/proj/ads/abstracts/phy/load/current/index.status'
 #GEN
-BIBCODES_GEN = '/proj/ads/abstracts/gen/load/latest/index.status'
+BIBCODES_GEN = '/proj/ads/abstracts/gen/load/current/index.status'
 #PRE
-BIBCODES_PRE = '/proj/ads/abstracts/pre/load/latest/index.status'
-#ALL
-BIBCODES_ALL = '/proj/ads/abstracts/config/bib2accno.dat'
+BIBCODES_PRE = '/proj/ads/abstracts/pre/load/current/index.status'
+#ALL ###!!!! This should not be used because it's not reliable
+#BIBCODES_ALL = '/proj/ads/abstracts/config/bib2accno.dat'
 
 #style sheet path
 STYLESHEET_PATH = BASEDIR + 'xsl/adsXml2MarkXml.xsl'
