@@ -400,6 +400,15 @@
 							<subfield code="9"><xsl:value-of select="comment/@origin"/></subfield>
 						</datafield>
 					</xsl:if>
+					<!-- Creation and modification dates -->
+					<xsl:if test="creationdate">
+						<xsl:if test="modificationdate">
+							<datafield tag="961" ind1="" ind2="">
+								<subfield code="c"><xsl:value-of select="modificationdate"/></subfield>
+								<subfield code="x"><xsl:value-of select="creationdate"/></subfield>
+							</datafield>
+						</xsl:if>
+					</xsl:if>
 					<!-- Timestamp signature -->
 					<xsl:if test="ADStimestamp">
 						<datafield tag="995" ind1="" ind2="">
