@@ -311,7 +311,7 @@ def extractor_process(q_todo, q_done, q_probl, lock_stdout, q_life, extraction_d
         #I exit from both loops
         if max_number_of_bibs_to_skip == 0:
             lock_stdout.acquire()
-            printmsg(True, multiprocessing.current_process().name + (' (worker)  Detected possible error with ADS data access: skipped %s bibcodes in one group \n' % max_number_of_bibs_to_skip))  
+            printmsg(True, multiprocessing.current_process().name + (' (worker) Detected possible error with ADS data access: skipped %s bibcodes in one group \n' % max(settings.NUMBER_OF_BIBCODES_PER_GROUP / 10, 500)))  
             lock_stdout.release()
             queue_empty = True
             break
