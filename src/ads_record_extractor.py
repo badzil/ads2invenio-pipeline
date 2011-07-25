@@ -24,7 +24,7 @@ import libxml2
 import itertools
 import os
 
-import ads.ADSExports_alternative
+import ads.ADSExports
 
 import settings
 import write_files
@@ -290,7 +290,7 @@ def extractor_process(q_todo, q_done, q_probl, lock_stdout, q_life, extraction_d
         bibcodes_probl = []
         
         #I define a ADSEXPORT object
-        recs = ads.ADSExports_alternative.ADSRecords('full', 'XML')
+        recs = ads.ADSExports.ADSRecords('full', 'XML')
         
         # I define a maximum amount of bibcodes I can skip per each cicle: the number of bibcodes per group / 10 (minimum 500)
         # if i skip more than this amount it means that there is something 
