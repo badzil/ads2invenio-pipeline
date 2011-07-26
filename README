@@ -1,0 +1,12 @@
+Copyright 2011, The SAO/NASA Astrophysics Data System. 
+http://adsabs.harvard.edu/
+
+Collections of tools to update Invenio from the ADS.
+
+Authors:
+* Giovanni Di Milia <gdimilia@cfa.harvard.edu>;
+* Benoit Thiell <bthiell@cfa.harvard.edu>.
+
+Thanks to Edwin Henneken <ehenneken@cfa.harvard.edu> for the ADSExports module.
+Thanks to Alberto Accomazzi <aaccomazzi@cfa.harvard.edu> for the creation of
+the timestamps.
